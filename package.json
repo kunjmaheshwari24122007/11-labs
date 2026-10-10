@@ -1,0 +1,26 @@
+{
+  "name": "eleven-narrate",
+  "version": "1.0.0",
+  "description": "Premium Text-to-Speech web application powered by the ElevenLabs API and Netlify serverless functions.",
+  "scripts": {
+    "dev": "netlify dev",
+    "start": "python local_server.py",
+    "studio": "python local_server.py"
+  },
+  "keywords": [
+    "elevenlabs",
+    "text-to-speech",
+    "tts",
+    "audio",
+    "speech-synthesis",
+    "netlify-functions"
+  ],
+  "author": "ElevenNarrate Studio",
+  "license": "MIT",
+  "devDependencies": {
+    "netlify-cli": "^17.38.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
