@@ -276,6 +276,12 @@ async function checkAccountStatus() {
 
   if (data) {
     appState.accountStatus = data;
+    if (data.apiKey && !appState.customApiKey) {
+      appState.customApiKey = data.apiKey;
+      try {
+        localStorage.setItem("elevennarrate_api_key", data.apiKey);
+      } catch (e) {}
+    }
 
     if (DOM.apiStatusBadge && DOM.apiStatusDesc) {
       if (data.ttsStatus === "unusual_activity_blocked") {
@@ -799,6 +805,13 @@ async function generateNarration() {
   const apiKey = getActiveApiKey();
   const isLocal = appState.engine === "local" || appState.selectedVoiceId?.startsWith("local-");
 
+  if (!isLocal && !apiKey && window.location.port !== "8888") {
+    showNotification("warning", "API Key Required", "Please enter your ElevenLabs API key in Settings & Keys, or use the Local Studio Synthesizer.");
+    openSettingsModal();
+    setLoadingState(false);
+    return;
+  }
+
   let requestUrl = "";
   let requestHeaders = {};
   let requestBody = "";
@@ -923,19 +936,26 @@ async function generateNarration() {
 
     const displayMsg = `[HTTP ${response.status}] ${errorMessage}`;
 
-    // ElevenLabs Free Tier Anti-Abuse Flagging
+    // ElevenLabs Free Tier Anti-Abuse Flagging & Invalid Key handling
     const isUnusualActivity = (
       errorCode === "ELEVENLABS_UNUSUAL_ACTIVITY" ||
       errorCode === "detected_unusual_activity" ||
       errorMessage.toLowerCase().includes("unusual activity")
     );
 
-    if (isUnusualActivity && DOM.fallbackModal) {
+    const isInvalidKey = (
+      response.status === 401 &&
+      (errorMessage.toLowerCase().includes("invalid api key") || errorCode === "unauthorized" || errorCode === "invalid_api_key")
+    );
+
+    if ((isUnusualActivity || isInvalidKey) && DOM.fallbackModal) {
       if (DOM.fallbackModalMessage) {
-        DOM.fallbackModalMessage.textContent = displayMsg;
+        DOM.fallbackModalMessage.textContent = isInvalidKey
+          ? "Your ElevenLabs API key is missing or invalid. Please update your API key in Settings & Keys, or generate narration immediately using the built-in Local Studio Synthesizer (Free)."
+          : displayMsg;
       }
       DOM.fallbackModal.hidden = false;
-      showNotification("warning", `ElevenLabs Restriction (${response.status})`, errorMessage);
+      showNotification("warning", isInvalidKey ? "Invalid API Key (401)" : `ElevenLabs Restriction (${response.status})`, errorMessage);
       setLoadingState(false);
       return;
     }

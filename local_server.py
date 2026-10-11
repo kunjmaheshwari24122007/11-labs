@@ -248,7 +248,8 @@ class ElevenNarrateHandler(SimpleHTTPRequestHandler):
                     "characterLimit": char_limit,
                     "ttsStatus": tts_status,
                     "ttsMessage": tts_message,
-                    "localSynthesizerReady": True
+                    "localSynthesizerReady": True,
+                    "apiKey": api_key
                 })
         except urllib.error.HTTPError as e:
             self.send_json_response(e.code, {
